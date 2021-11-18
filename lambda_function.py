@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os
 import pandas as pd
-import requests
+from botocore.vendored import requests
 import numpy as np
 import json
 from datetime import date
@@ -158,28 +158,30 @@ def get_investment_recommendation(risk_level):
         # Sharpe Ratio
         sharpe_arr[ind] = ret_arr[ind]/vol_arr[ind]
 
-    if risk_level =='Low Risk':
+    if risk_level =='Low':
         portfolio_sharpe = sharpe_arr.max()
         expected_return = ret_arr[sharpe_arr.argmax()]
         port_weights = all_weights[sharpe_arr.argmax(),:]
-        recommended_port = list(zip(list(port_weights),investment_options))
-    elif risk_level =='Some Risk':
+        recommended_port = list(zip(list(round(port_weights*100,2)),investment_options))
+    elif risk_level =='Medium':
         portfolio_selected = len(sharpe_arr)/2
         portfolio_sharpe = sharpe_arr[portfolio_selected]
         expected_return = ret_arr[portfolio_selected]
         port_weights = all_weights[portfolio_selected,:]
-        recommended_port = list(zip(list(port_weights),investment_options))
-    elif risk_level =='High Risk':
+        recommended_port = list(zip(list(round(port_weights*100,2)),investment_options))
+    elif risk_level =='High':
         portfolio_selected = int(len(ret_arr)/1.05)
         portfolio_sharpe = sharpe_arr[portfolio_selected]
         expected_return = ret_arr[portfolio_selected]
         port_weights = all_weights[portfolio_selected,:]
-        recommended_port = list(zip(list(port_weights),investment_options))
-    elif risk_level =='Maximum Risk':
+        recommended_port = list(zip(list(round(port_weights*100,2)),investment_options))
+    elif risk_level =='Maximum':
         portfolio_sharpe = sharpe_arr[ret_arr.argmax()]
         expected_return = ret_arr.max()
         port_weights = all_weights[ret_arr.argmax(),:]
-        recommended_port = list(zip(list(port_weights),investment_options))
+        recommended_port = list(zip(list(round(port_weights*100,2)),investment_options))
+
+    return expected_return, recommended_port
 
 
 ### Intents Handlers ###
@@ -224,20 +226,9 @@ def recommend_portfolio(intent_request):
         return delegate(output_session_attributes, get_slots(intent_request))
 
     # Get the initial investment recommendation
-    if intent_request['riskLevel'] == "Low Risk":
-        #Do this
-        print('Low Risk')
-    elif intent_request['riskLevel'] == "Some Risk":
-        #Do this
-        print('Low Risk')
-    elif intent_request['riskLevel'] == "High Risk":
-        #Do this
-        print('Low Risk')
-    elif intent_request['riskLevel'] == "Maxmium Risk":
-        #Do this
-        print('Low Risk')
+    
     ### YOUR FINAL INVESTMENT RECOMMENDATION CODE STARTS HERE ###
-
+    expected_return, recommended_portfolio = get_investment_recommendation(risk_level)
     ### YOUR FINAL INVESTMENT RECOMMENDATION CODE ENDS HERE ###
 
     # Return a message with the initial recommendation based on the risk level.
@@ -246,10 +237,25 @@ def recommend_portfolio(intent_request):
         "Fulfilled",
         {
             "contentType": "PlainText",
-            "content": """{} thank you for your information;
-            based on the risk level you defined, my recommendation is to choose an investment portfolio with {}
+            "content": """{} thank you for your information; 
+            based on the risk level you defined, my recommendation is to choose an investment portfolio with 
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            {}
+            Your expected return can be {}
+            Past returns are not representative of future returns
             """.format(
-                first_name, initial_recommendation
+                first_name, recommended_portfolio[0], recommended_portfolio[1], recommended_portfolio[2], recommended_portfolio[3], recommended_portfolio[4], recommended_portfolio[5], recommended_portfolio[6], recommended_portfolio[7], 
+                recommended_portfolio[8], recommended_portfolio[9], recommended_portfolio[10], recommended_portfolio[11], expected_return
             ),
         },
     )
